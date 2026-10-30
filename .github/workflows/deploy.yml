@@ -1,0 +1,66 @@
+name: Deploy Blog Gémina
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Mismo horario que el blog de BIMARG: 09:00 y 18:00 ART = 12:00 y 21:00 UTC.
+    # Para publicar al instante: Actions > Deploy Blog Gémina > Run workflow.
+    - cron: "0 12,21 * * *"
+  workflow_dispatch:
+
+# Si una corrida queda colgada, la siguiente la cancela en vez de apilarse.
+concurrency:
+  group: deploy-blog-gemina
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: Build desde Notion + Deploy Cloudflare Pages
+    runs-on: ubuntu-latest
+
+    # Tope duro. Un build normal tarda ~1 min. Si pasa de 10, algo está roto.
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout del repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Build desde Notion
+        timeout-minutes: 5
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+        run: npm run build
+
+      - name: Verificar que el build generó algo
+        run: |
+          if [ ! -f ./dist/blog/index.html ]; then
+            echo "ERROR: no se generó dist/blog/index.html. Abortando deploy."
+            exit 1
+          fi
+          echo "Archivos generados:"
+          find ./dist/blog -type f | wc -l
+
+      - name: Página 404 (el Worker gemina-blog-router la usa para caer al sitio principal)
+        run: |
+          [ -f ./dist/404.html ] || printf '<!doctype html><meta charset="utf-8"><title>404</title><h1>404</h1>' > ./dist/404.html
+
+      # Cloudflare Pages, proyecto "gemina-blog". El Worker "gemina-blog-router"
+      # sirve gemina.ar/blog/* desde este proyecto (ver worker/).
+      - name: Deploy a Cloudflare Pages
+        timeout-minutes: 4
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 2eef9135dd2520b16ec2401146bfc6cc
+        run: |
+          npx --yes wrangler@4 pages deploy ./dist --project-name gemina-blog --branch main --commit-dirty=true
+          echo "Deploy OK"
