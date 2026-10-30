@@ -28,6 +28,9 @@ const BRAND = "Gémina";
 const WHATSAPP = "https://wa.me/5492996287652";
 const DEFAULT_AUTHOR = "Equipo Gémina";
 const DEFAULT_OG = `${SITE}/img/hero/casa-hero-1280.webp`;
+// Microsoft Clarity (proyecto z5ze96wfb9, cuenta bimarg.arq): el mismo tag que la home de gemina.ar.
+// NO SACAR: sin esto el blog deja de medir. Aviso en /legales#privacidad.
+const CLARITY = `<script type="text/javascript">(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window, document, "clarity", "script", "z5ze96wfb9");</script>`;
 // Íconos del logo (isologo e isotipo), los mismos símbolos SVG de la home.
 const LOGO_SYMBOLS = fs.readFileSync(path.join(__dirname, "partials", "logo-symbols.svg"), "utf8");
 
@@ -423,6 +426,7 @@ function htmlShell({ title, description, canonical, content, extraHead = "", ogI
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/blog/style.css" />
+  ${CLARITY}
   ${extraHead}
 </head>
 <body>
