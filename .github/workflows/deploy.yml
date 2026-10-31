@@ -10,6 +10,10 @@ on:
   workflow_dispatch:
 
 # Si una corrida queda colgada, la siguiente la cancela en vez de apilarse.
+# El job solo lee el repo: el token de GitHub no necesita más permisos.
+permissions:
+  contents: read
+
 concurrency:
   group: deploy-blog-gemina
   cancel-in-progress: true
@@ -31,8 +35,9 @@ jobs:
         with:
           node-version: "20"
 
+      # npm ci instala exactamente lo del package-lock.json (sin paquetes nuevos ni versiones que cambien solas).
       - name: Instalar dependencias
-        run: npm install
+        run: npm ci
 
       - name: Build desde Notion
         timeout-minutes: 5

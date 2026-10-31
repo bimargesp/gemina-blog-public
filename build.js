@@ -28,6 +28,8 @@ const BRAND = "Gémina";
 const WHATSAPP = "https://wa.me/5492996287652";
 const DEFAULT_AUTHOR = "Equipo Gémina";
 const DEFAULT_OG = `${SITE}/img/hero/casa-hero-1280.webp`;
+// Misma entidad que el JSON-LD de la home (https://gemina.ar/#empresa). Mantener los datos iguales en los dos lados.
+const ORG = { "@type": "GeneralContractor", "@id": `${SITE}/#empresa`, name: BRAND, url: `${SITE}/`, logo: `${SITE}/android-chrome-512x512.png` };
 // Microsoft Clarity (proyecto z5ze96wfb9, cuenta bimarg.arq): el mismo tag que la home de gemina.ar.
 // NO SACAR: sin esto el blog deja de medir. Aviso en /legales#privacidad.
 const CLARITY = `<script type="text/javascript">(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window, document, "clarity", "script", "z5ze96wfb9");</script>`;
@@ -184,15 +186,23 @@ function richTextToHtml(richTexts) {
       if (rt.annotations.code) text = `<code>${text}</code>`;
       if (rt.annotations.underline) text = `<u>${text}</u>`;
     }
-    if (rt.href) {
+    const href = safeHref(rt.href);
+    if (href) {
       // Links internos (gemina.ar o rutas relativas) sin target _blank: mejor para SEO y navegación.
-      const internal = rt.href.startsWith("/") || rt.href.startsWith(SITE);
+      const internal = href.startsWith("/") || href.startsWith(SITE);
       text = internal
-        ? `<a href="${esc(rt.href)}">${text}</a>`
-        : `<a href="${esc(rt.href)}" target="_blank" rel="noopener">${text}</a>`;
+        ? `<a href="${esc(href)}">${text}</a>`
+        : `<a href="${esc(href)}" target="_blank" rel="noopener">${text}</a>`;
     }
     return text;
   }).join("");
+}
+
+// Solo esquemas seguros. Cualquier otro (javascript:, data:, etc.) se publica como texto sin link.
+function safeHref(href) {
+  const h = String(href || "").trim();
+  if (h.startsWith("/") && !h.startsWith("//")) return h;
+  return /^(https?:|mailto:|tel:)/i.test(h) ? h : null;
 }
 
 function plainText(richTexts) {
@@ -232,12 +242,12 @@ async function blockToHtml(block) {
 
     case "callout":
       const emoji = data.icon?.emoji || "💡";
-      return `<div class="callout"><span class="callout-icon">${emoji}</span><div>${richTextToHtml(data.rich_text)}</div></div>`;
+      return `<div class="callout"><span class="callout-icon" aria-hidden="true">${esc(emoji)}</span><div>${richTextToHtml(data.rich_text)}</div></div>`;
 
     case "code":
       const lang = data.language || "";
       const code = data.rich_text.map(rt => rt.plain_text).join("").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      return `<pre><code class="language-${lang}">${code}</code></pre>`;
+      return `<pre><code class="language-${esc(lang)}">${code}</code></pre>`;
 
     case "divider":
       return "<hr>";
@@ -259,13 +269,11 @@ async function blockToHtml(block) {
         const videoId = videoUrl.match(/(?:v=|youtu\.be\/|shorts\/)([a-zA-Z0-9_-]+)/)?.[1];
         return videoId ? `<div class="video-embed"><iframe src="https://www.youtube-nocookie.com/embed/${videoId}" title="Video" loading="lazy" frameborder="0" allowfullscreen></iframe></div>` : "";
       }
-      return `<video controls preload="metadata" src="${videoUrl}"></video>`;
+      return safeHref(videoUrl) ? `<video controls preload="metadata" src="${esc(videoUrl)}"></video>` : "";
 
     case "embed":
-      return `<div class="bookmark"><a href="${esc(data.url)}" target="_blank" rel="noopener">${esc(data.url)}</a></div>`;
-
     case "bookmark":
-      return `<div class="bookmark"><a href="${esc(data.url)}" target="_blank" rel="noopener">${esc(data.url)}</a></div>`;
+      return safeHref(data.url) ? `<div class="bookmark"><a href="${esc(data.url)}" target="_blank" rel="noopener">${esc(data.url)}</a></div>` : "";
 
     case "table_of_contents":
     case "breadcrumb":
@@ -371,6 +379,8 @@ async function fetchPosts() {
     const fechaRaw = props["Fecha de Publicación"]?.date?.start || page.created_time;
     const fecha = formatDate(fechaRaw);
     const editado = page.last_edited_time;
+    // "Actualizado" solo si se editó al menos un día después de la fecha de publicación.
+    const actualizado = editado && editado.slice(0, 10) > fechaRaw.slice(0, 10) ? formatDate(editado.slice(0, 10)) : "";
 
     const imagenFiles = props["Imagen de Portada"]?.files;
     let imagenUrl = null;
@@ -386,7 +396,7 @@ async function fetchPosts() {
 
     const bodyHtml = await blocksToHtml(page.id);
 
-    posts.push({ id: page.id, titulo, slug, descripcion, categoria, autor, tiempoLectura, fecha, fechaRaw, editado, imagenLocal, bodyHtml });
+    posts.push({ id: page.id, titulo, slug, descripcion, categoria, autor, tiempoLectura, fecha, fechaRaw, editado, actualizado, imagenLocal, bodyHtml });
   }
 
   return posts;
@@ -540,7 +550,7 @@ function indexTemplate(posts) {
     url: `${SITE}/blog/`,
     description,
     inLanguage: "es-AR",
-    publisher: { "@type": "Organization", name: BRAND, url: SITE, logo: { "@type": "ImageObject", url: `${SITE}/apple-touch-icon.png` } },
+    publisher: ORG,
     blogPost: posts.slice(0, 20).map(p => ({
       "@type": "BlogPosting",
       headline: p.titulo,
@@ -609,6 +619,8 @@ function postTemplate(post, allPosts) {
           <span>${esc(post.autor)}</span>
           <span aria-hidden="true">·</span>
           <time datetime="${post.fechaRaw.slice(0, 10)}">${post.fecha}</time>
+          ${post.actualizado ? `<span aria-hidden="true">·</span>
+          <span>Actualizado el <time datetime="${post.editado.slice(0, 10)}">${post.actualizado}</time></span>` : ""}
           <span aria-hidden="true">·</span>
           <span>${esc(post.tiempoLectura)} de lectura</span>
         </div>
@@ -635,9 +647,9 @@ function postTemplate(post, allPosts) {
       datePublished: post.fechaRaw.slice(0, 10),
       dateModified: (post.editado || post.fechaRaw).slice(0, 10),
       author: post.autor === DEFAULT_AUTHOR
-        ? { "@type": "Organization", name: BRAND, url: SITE }
-        : { "@type": "Person", name: post.autor },
-      publisher: { "@type": "Organization", name: BRAND, url: SITE, logo: { "@type": "ImageObject", url: `${SITE}/apple-touch-icon.png` } },
+        ? ORG
+        : { "@type": "Person", name: post.autor, worksFor: ORG },
+      publisher: ORG,
       mainEntityOfPage: url,
       articleSection: post.categoria,
       inLanguage: "es-AR",
@@ -686,6 +698,39 @@ function rssXml(posts) {
 `;
 }
 
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://www.clarity.ms https://scripts.clarity.ms https://static.cloudflareinsights.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' data: https:",
+  "media-src 'self' https:",
+  "frame-src https://www.youtube-nocookie.com",
+  "connect-src 'self' https://*.clarity.ms https://cloudflareinsights.com",
+  "frame-ancestors 'self'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+].join("; ");
+
+const HEADERS = `/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: ${CSP}
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+/blog/images/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/blog/style.css
+  Cache-Control: public, max-age=3600
+
+/blog/main.js
+  Cache-Control: public, max-age=3600
+`;
+
 // ─── Main ─────────────────────────────────────────────────────────────────
 
 async function build() {
@@ -719,9 +764,16 @@ async function build() {
   // Sitemap del blog: se regenera solo con los posts publicados.
   const today = new Date().toISOString().slice(0, 10);
   const urls = [`  <url><loc>${SITE}/blog/</loc><lastmod>${today}</lastmod></url>`]
-    .concat(posts.map(p => `  <url><loc>${SITE}/blog/${p.slug}/</loc><lastmod>${(p.editado || p.fechaRaw || today).slice(0, 10)}</lastmod></url>`));
+    .concat(posts.map(p => {
+      const pub = p.fechaRaw.slice(0, 10), ed = (p.editado || "").slice(0, 10);
+      return `  <url><loc>${SITE}/blog/${p.slug}/</loc><lastmod>${ed > pub ? ed : pub}</lastmod></url>`;
+    }));
   writeFile(path.join(BLOG_DIST, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`);
   writeFile(path.join(BLOG_DIST, "feed.xml"), rssXml(posts));
+
+  // Headers de seguridad de Cloudflare Pages: los mismos que manda la home de gemina.ar,
+  // más YouTube (videos embebidos) e imágenes https (por si una imagen de Notion no se pudo bajar).
+  writeFile(path.join(DIST, "_headers"), HEADERS);
 
   const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
   console.log(`\n✅ Build completado en ${elapsed}s`);
