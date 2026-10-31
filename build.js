@@ -448,9 +448,9 @@ function htmlShell({ title, description, canonical, content, extraHead = "", ogI
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="alternate" type="application/rss+xml" title="Blog de ${BRAND}" href="${SITE}/blog/feed.xml" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" />
   <link rel="stylesheet" href="/blog/style.css" />
   ${CLARITY}
   ${extraHead}
@@ -717,8 +717,8 @@ function rssXml(posts) {
 const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://www.clarity.ms https://scripts.clarity.ms https://static.cloudflareinsights.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline' https://api.fontshare.com",
+  "font-src 'self' https://cdn.fontshare.com",
   "img-src 'self' data: https:",
   "media-src 'self' https:",
   "frame-src https://www.youtube-nocookie.com",

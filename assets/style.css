@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════
    GÉMINA BLOG — stylesheet
    Mismo sistema visual que gemina.ar: blanco, tinta #1D1D1F, cian modelo #0089C4,
-   Inter + IBM Plex Mono, botones píldora. Grafito = obra, cian = modelo.
+   Satoshi (Fontshare), botones píldora. Grafito = obra, cian = modelo.
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
@@ -15,8 +15,8 @@
   --cian-txt: #0077AE;
   --cian-osc: #4CC9FF;
   --cian-suave: rgba(0,137,196,.08);
-  --f-tit: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif;
-  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  /* Satoshi en todo, igual que la home de gemina.ar (31/10/2026). Sin fuentes del sistema ni monoespaciadas. */
+  --f-tit: "Satoshi", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --r-lg: 24px; --r-md: 18px; --r-sm: 12px;
   --shadow: 0 1px 2px rgba(0,0,0,.04), 0 12px 40px -12px rgba(0,0,0,.12);
   --ease: cubic-bezier(.22,1,.36,1);
@@ -29,6 +29,7 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 80px; -webkit-text-size-adjust: 100%; }
+button, input, select, textarea { font-family: inherit; }
 body {
   margin: 0; background: var(--white); color: var(--ink);
   font-family: var(--f-tit); font-size: 16px; line-height: 1.6; letter-spacing: -.01em;
@@ -38,14 +39,14 @@ img, svg { display: block; max-width: 100%; }
 img { height: auto; }
 a { color: inherit; }
 p { margin: 0; text-wrap: pretty; }
-h1, h2, h3, h4 { margin: 0; text-wrap: balance; letter-spacing: -.03em; }
+h1, h2, h3, h4 { margin: 0; text-wrap: balance; letter-spacing: -.025em; }
 :focus-visible { outline: 2px solid var(--cian); outline-offset: 3px; }
 .wrap { max-width: 1240px; margin: 0 auto; padding-left: max(var(--gut), env(safe-area-inset-left)); padding-right: max(var(--gut), env(safe-area-inset-right)); }
 .skip { position: fixed; left: 16px; top: 16px; z-index: 100; background: var(--cian); color: #fff; padding: 8px 12px; font-weight: 700; transform: translateY(-200%); transition: transform .3s var(--ease); }
 .skip:focus { transform: none; }
 
 /* ── Tipo ──────────────────────────────────────────────── */
-.label { font-family: var(--f-mono); font-size: 12px; line-height: 16px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+.label { font-family: var(--f-tit); font-size: 12px; line-height: 16px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
 .label b { font-weight: 500; color: var(--cian-txt); }
 .lead { font-size: 18px; line-height: 1.6; color: var(--ink-2); max-width: 62ch; }
 
@@ -103,7 +104,7 @@ h1, h2, h3, h4 { margin: 0; text-wrap: balance; letter-spacing: -.03em; }
 .post-card-body { display: flex; flex-direction: column; gap: 10px; padding: 22px 24px 24px; flex: 1; }
 .post-card-title { font-size: 20px; line-height: 1.25; font-weight: 700; }
 .post-card-desc { font-size: 15px; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.post-card-meta { margin-top: auto; padding-top: 8px; display: flex; flex-wrap: wrap; gap: 4px 16px; font-family: var(--f-mono); font-size: 12px; color: var(--ink-2); }
+.post-card-meta { margin-top: auto; padding-top: 8px; display: flex; flex-wrap: wrap; gap: 4px 16px; font-family: var(--f-tit); font-size: 12px; color: var(--ink-2); }
 .no-posts { color: var(--ink-2); font-size: 18px; padding: 48px 0; }
 
 /* ── Post ──────────────────────────────────────────────── */
@@ -114,7 +115,7 @@ h1, h2, h3, h4 { margin: 0; text-wrap: balance; letter-spacing: -.03em; }
 .crumbs a { text-decoration: none; }
 .crumbs a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .post-title { margin: 14px 0 18px; font-size: clamp(32px, 5.2vw, 52px); line-height: 1.08; font-weight: 700; }
-.post-meta { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 6px 10px; font-family: var(--f-mono); font-size: 12.5px; color: var(--ink-2); }
+.post-meta { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 6px 10px; font-family: var(--f-tit); font-size: 12.5px; color: var(--ink-2); }
 .post-cover { margin: 0 auto 8px; max-width: 1080px; border-radius: var(--r-lg); overflow: hidden; background: var(--soft); }
 .post-cover img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
 
@@ -133,8 +134,8 @@ h1, h2, h3, h4 { margin: 0; text-wrap: balance; letter-spacing: -.03em; }
 .post-body li.todo { list-style: none; margin-left: -1.3em; }
 .post-body blockquote { margin-left: 0; padding: 4px 0 4px 22px; border-left: 3px solid var(--cian); font-size: 21px; line-height: 1.5; color: var(--ink); font-weight: 500; }
 .post-body hr { border: 0; border-top: 1px solid var(--hair); margin: 2.4em 0; }
-.post-body code { font-family: var(--f-mono); font-size: .88em; background: var(--soft); padding: 2px 6px; border-radius: 6px; }
-.post-body pre { background: var(--grafito); color: #E8EAED; padding: 20px; border-radius: var(--r-sm); overflow-x: auto; font-size: 14px; line-height: 1.6; }
+.post-body code { font-family: var(--f-tit); font-size: .88em; background: var(--soft); padding: 2px 6px; border-radius: 6px; }
+.post-body pre { font-family: var(--f-tit); background: var(--grafito); color: #E8EAED; padding: 20px; border-radius: var(--r-sm); overflow-x: auto; font-size: 14px; line-height: 1.6; }
 .post-body pre code { background: none; padding: 0; color: inherit; }
 .post-body .callout { display: flex; gap: 14px; padding: 18px 20px; background: var(--cian-suave); border-radius: var(--r-md); font-size: 17px; }
 .post-body .callout-icon { flex: none; font-size: 20px; line-height: 1.5; }
