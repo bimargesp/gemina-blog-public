@@ -343,6 +343,12 @@ async function blocksToHtml(pageId) {
 
 // ─── Leer posts de Notion ─────────────────────────────────────────────────
 
+// Fecha de hoy en Argentina (UTC-3, sin horario de verano), formato AAAA-MM-DD.
+// El runner de GitHub está en UTC: a las 21:00 de Argentina en UTC ya es el día siguiente.
+function todayAR() {
+  return new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
 async function fetchPosts() {
   const dbId = process.env.NOTION_DATABASE_ID;
   if (!dbId) throw new Error("NOTION_DATABASE_ID no está definida");
@@ -354,7 +360,17 @@ async function fetchPosts() {
     const response = await retryWithExponentialBackoff(async () => {
       return await notion.databases.query({
         database_id: dbId,
-        filter: { property: "Estado", select: { equals: "Publicado" } },
+        // Publicado y con fecha de hoy o anterior (hora Argentina): se pueden marcar varios
+        // posts juntos y cada uno sale en la primera corrida de su fecha. Sin fecha, sale igual.
+        filter: {
+          and: [
+            { property: "Estado", select: { equals: "Publicado" } },
+            { or: [
+              { property: "Fecha de Publicación", date: { on_or_before: todayAR() } },
+              { property: "Fecha de Publicación", date: { is_empty: true } },
+            ] },
+          ],
+        },
         sorts: [{ property: "Fecha de Publicación", direction: "descending" }],
         page_size: 100,
         ...(cursor ? { start_cursor: cursor } : {}),

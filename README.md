@@ -4,7 +4,7 @@ Blog estático de **gemina.ar/blog**, generado automáticamente desde Notion. Es
 
 **Stack:** Node.js + Notion API + GitHub Actions + Cloudflare Pages (proyecto `gemina-blog`) + Worker `gemina-blog-router`.
 
-Cada vez que publicás un post en Notion (Estado = Publicado), la Action arma el HTML y lo publica en `gemina.ar/blog`. Corre sola a las 09:00 y 18:00 (hora argentina). Para publicar al instante: GitHub → Actions → **Deploy Blog Gémina** → **Run workflow**.
+La Action publica los posts con Estado = Publicado y Fecha de Publicación de hoy o anterior (hora Argentina). Se pueden marcar varios posts como Publicado con fechas futuras: cada uno sale en la primera corrida de su fecha. Corre sola a las 09:00 y 18:00 (hora argentina). Para publicar al instante: GitHub → Actions → **Deploy Blog Gémina** → **Run workflow**.
 
 ---
 
@@ -51,7 +51,7 @@ npx wrangler@4 deploy worker/router.js --name gemina-blog-router --compatibility
 2. Completar: Título, Slug, Descripción (140-160 caracteres), Categoría, Fecha de Publicación, Imagen de Portada (WebP 1200 px, `slug-cover.webp`).
 3. Escribir el contenido con bloques normales de Notion. `#` = sección (h2), `##` = subsección (h3). Tablas, toggles y columnas no se publican.
 4. Revisar contra la guía de publicación y las reglas de coherencia (página BLOG en Notion).
-5. Estado = **Publicado**. Aparece en la próxima corrida (09:00 o 18:00) o al instante con Run workflow.
+5. Estado = **Publicado**. Aparece en la primera corrida (09:00 o 18:00) desde su Fecha de Publicación, o al instante con Run workflow si la fecha ya llegó.
 
 ---
 
