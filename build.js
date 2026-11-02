@@ -27,7 +27,9 @@ const SITE = "https://gemina.ar";
 const BRAND = "Gémina";
 const WHATSAPP = "https://wa.me/5492996287652";
 const DEFAULT_AUTHOR = "Equipo Gémina";
-const DEFAULT_OG = `${SITE}/img/hero/casa-hero-1280.webp`;
+// Imagen para compartir cuando un post no tiene portada. Copia propia (assets/og-default.jpg, sale de
+// la og:image de la home al 02/11/2026): así el blog no depende de archivos de la home que pueden cambiar.
+const DEFAULT_OG = `${SITE}/blog/og-default.jpg`;
 // Misma entidad que el JSON-LD de la home (https://gemina.ar/#empresa). Mantener los datos iguales en los dos lados.
 const ORG = { "@type": "GeneralContractor", "@id": `${SITE}/#empresa`, name: BRAND, url: `${SITE}/`, logo: `${SITE}/android-chrome-512x512.png` };
 // Microsoft Clarity (proyecto z5ze96wfb9, cuenta bimarg.arq): el mismo tag que la home de gemina.ar.
@@ -768,6 +770,20 @@ async function build() {
   // Dos posts con el mismo slug se pisarían: cortar el build antes de publicar algo roto.
   const dup = posts.map(p => p.slug).filter((s, i, a) => a.indexOf(s) !== i);
   if (dup.length) throw new Error(`Slugs repetidos en Notion: ${[...new Set(dup)].join(", ")}`);
+
+  // Links a posts del blog que todavía no salieron (Borrador o fecha futura): se publican como texto
+  // común para no mandar a un 404. Cuando el post de destino se publica, la próxima corrida pone el link.
+  const publicados = new Set(posts.map(p => p.slug));
+  let linksOcultos = 0;
+  const linkInterno = /<a href="(?:https:\/\/gemina\.ar)?\/blog\/([a-z0-9-]+)\/?"[^>]*>(.*?)<\/a>/g;
+  for (const post of posts) {
+    post.bodyHtml = post.bodyHtml.replace(linkInterno, (a, slug, texto) => {
+      if (publicados.has(slug)) return a;
+      linksOcultos++;
+      return texto;
+    });
+  }
+  if (linksOcultos) console.log(`   ${linksOcultos} link(s) a posts sin publicar quedaron como texto\n`);
 
   console.log("📄 Generando páginas...");
   writeFile(path.join(BLOG_DIST, "index.html"), indexTemplate(posts));
