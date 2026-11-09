@@ -508,7 +508,7 @@ function htmlShell({ title, description, canonical, content, extraHead = "", ogI
       <div class="foot">
         <div class="foot-brand">
           <a class="brand" href="/" aria-label="${BRAND}, volver al inicio">${ISOLOGO}</a>
-          <p>Constructora y desarrolladora de Neuquén. Construimos dos veces: primero en el modelo, después en el terreno.</p>
+          <p>Arquitectura · Construcción · Desarrollos en Neuquén. Del gemelo digital a la obra.</p>
           <p>${BRAND} es una marca de BIMARG.</p>
         </div>
         <div>
@@ -519,7 +519,7 @@ function htmlShell({ title, description, canonical, content, extraHead = "", ogI
           <span class="label">Contacto</span>
           <ul>
             <li><a href="${WHATSAPP}" target="_blank" rel="noopener">WhatsApp: +54 9 299 628-7652</a></li>
-            <li><a href="https://construir.bimarg.com/" target="_blank" rel="noopener">Calculadora por rubros</a></li>
+            <li><a href="https://construir.bimarg.com/" target="_blank" rel="noopener">Calculadora de obra por rubros</a></li>
             <li><a href="/blog/">Blog</a></li>
           </ul>
         </div>
@@ -579,7 +579,7 @@ function indexTemplate(posts) {
     <div class="wrap">
       <span class="label"><b>Blog</b> · Neuquén capital y hasta 50 km</span>
       <h1>Antes de construir,<br><span>entendé tu obra.</span></h1>
-      <p class="lead">Cuánto cuesta construir, qué casa entra en tu lote, con qué sistema conviene hacerla y cómo se controla una obra semana a semana. Lo que aprendimos construyendo dos veces: primero en el modelo, después en el terreno.</p>
+      <p class="lead">Cuánto cuesta construir, qué casa entra en tu lote, con qué sistema conviene hacerla y cómo se controla una obra semana a semana. Lo que aprendimos del gemelo digital a la obra: primero en el modelo, después en el terreno.</p>
     </div>
   </header>
 
@@ -627,7 +627,7 @@ function ctaHtml() {
   <section class="cta-band">
     <div class="wrap cta-in">
       <div>
-        <span class="label"><b>¿Tenés terreno?</b></span>
+        <span class="label"><b>Tenés terreno?</b></span>
         <h2>Contanos qué querés construir.</h2>
         <p class="lead">Te armamos un diagnóstico: qué casa entra en tu lote, con qué sistema y cuánto cuesta, rubro por rubro.</p>
       </div>
