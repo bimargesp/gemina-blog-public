@@ -509,7 +509,6 @@ function htmlShell({ title, description, canonical, content, extraHead = "", ogI
         <div class="foot-brand">
           <a class="brand" href="/" aria-label="${BRAND}, volver al inicio">${ISOLOGO}</a>
           <p>Arquitectura · Construcción · Desarrollos en Neuquén. Del gemelo digital a la obra.</p>
-          <p>${BRAND} es una marca de BIMARG.</p>
         </div>
         <div>
           <span class="label">Zona</span>
