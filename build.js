@@ -16,6 +16,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import https from "https";
+import sharp from "sharp";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.join(__dirname, "dist");
@@ -97,6 +98,29 @@ function slugify(text) {
 // incidente 17-19 ago 2026).
 const IMG_TIMEOUT_MS = 15000;
 const IMG_MAX_REDIRECTS = 3;
+
+// Medidas reales de una imagen ya descargada y, si es grande, una versión de 600 px para las tarjetas.
+// Si algo falla, el build sigue con la imagen original (sin medidas ni versión chica).
+async function imageInfo(publicPath, { thumb = false } = {}) {
+  if (!publicPath || !publicPath.startsWith("/blog/images/")) return null;
+  const file = path.join(BLOG_DIST, "images", path.basename(publicPath));
+  try {
+    const m = await sharp(file).metadata();
+    const info = { src: publicPath, w: m.width, h: m.height, thumb: null };
+    if (thumb && m.width > 700) {
+      const name = path.basename(publicPath).replace(/\.[a-z]+$/i, "") + "-600.webp";
+      const dest = path.join(BLOG_DIST, "images", name);
+      if (!fs.existsSync(dest)) await sharp(file).resize({ width: 600 }).webp({ quality: 78 }).toFile(dest);
+      info.thumb = `/blog/images/${name}`;
+    }
+    return info;
+  } catch (e) {
+    console.warn(`  [img] ${path.basename(publicPath)}: sin medidas (${e.message})`);
+    return null;
+  }
+}
+
+const dims = (i) => (i && i.w && i.h ? ` width="${i.w}" height="${i.h}"` : "");
 
 async function downloadImage(url, filename) {
   if (!url || !url.startsWith("http")) return null;
@@ -261,7 +285,8 @@ async function blockToHtml(block) {
       // Descargar la imagen durante el build para evitar URLs expiradas de Notion
       const localPath = await downloadImage(imgUrl, `content-${block.id}`);
       const finalSrc = localPath || imgUrl;
-      return `<figure class="post-figure"><img src="${finalSrc}" alt="${esc(plainText(data.caption))}" loading="lazy">${caption ? `<figcaption>${caption}</figcaption>` : ""}</figure>`;
+      const info = await imageInfo(localPath);
+      return `<figure class="post-figure"><img src="${finalSrc}" alt="${esc(plainText(data.caption))}"${dims(info)} loading="lazy" decoding="async">${caption ? `<figcaption>${caption}</figcaption>` : ""}</figure>`;
     }
 
     case "video":
@@ -411,10 +436,11 @@ async function fetchPosts() {
     if (imagenUrl) {
       imagenLocal = await downloadImage(imagenUrl, slug + "-cover");
     }
+    const imagenInfo = await imageInfo(imagenLocal, { thumb: true });
 
     const bodyHtml = await blocksToHtml(page.id);
 
-    posts.push({ id: page.id, titulo, slug, descripcion, categoria, autor, tiempoLectura, fecha, fechaRaw, editado, actualizado, imagenLocal, bodyHtml });
+    posts.push({ id: page.id, titulo, slug, descripcion, categoria, autor, tiempoLectura, fecha, fechaRaw, editado, actualizado, imagenLocal, imagenInfo, bodyHtml });
   }
 
   return posts;
@@ -452,7 +478,8 @@ function htmlShell({ title, description, canonical, content, extraHead = "", ogI
   <link rel="alternate" type="application/rss+xml" title="Blog de ${BRAND}" href="${SITE}/blog/feed.xml" />
   <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
   <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
-  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" />
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" /></noscript>
   <link rel="stylesheet" href="/blog/style.css" />
   ${CLARITY}
   ${extraHead}
@@ -508,13 +535,22 @@ function htmlShell({ title, description, canonical, content, extraHead = "", ogI
 </html>`;
 }
 
-function cardHtml(p) {
+// Tarjeta: versión de 600 px cuando la hay. La primera del índice carga sin lazy y con prioridad
+// (es lo más grande que se ve al abrir el blog).
+function cardImg(p, first) {
+  const i = p.imagenInfo;
+  const srcset = i && i.thumb ? ` srcset="${i.thumb} 600w, ${p.imagenLocal} ${i.w}w" sizes="(min-width: 1100px) 370px, (min-width: 700px) 46vw, 100vw"` : "";
+  const carga = first ? ` fetchpriority="high"` : ` loading="lazy" decoding="async"`;
+  return `<img src="${(i && i.thumb) || p.imagenLocal}"${srcset} alt="${esc(p.titulo)}"${dims(i)}${carga} />`;
+}
+
+function cardHtml(p, first = false) {
   return `
       <article class="post-card reveal" data-category="${esc(p.categoria)}">
         <a href="/blog/${p.slug}/" class="post-card-link">
           <div class="post-card-img">
             ${p.imagenLocal
-              ? `<img src="${p.imagenLocal}" alt="${esc(p.titulo)}" loading="lazy" />`
+              ? cardImg(p, first)
               : `<div class="post-card-placeholder" aria-hidden="true"><svg viewBox="0 0 512 512"><use href="#isotipo"/></svg></div>`}
           </div>
           <div class="post-card-body">
@@ -531,7 +567,7 @@ function cardHtml(p) {
 }
 
 function indexTemplate(posts) {
-  const cards = posts.map(cardHtml).join("");
+  const cards = posts.map((p, i) => cardHtml(p, i === 0)).join("");
 
   const categorias = [...new Set(posts.map(p => p.categoria))];
   const filtros = categorias.map(c => `<button class="filter-btn" type="button" data-filter="${esc(c)}">${esc(c)}</button>`).join("");
@@ -615,7 +651,7 @@ function relatedPostsHtml(currentPost, allPosts) {
       <div class="wrap">
         <h2 class="related-title">Seguí leyendo</h2>
         <div class="posts-grid">
-          ${related.map(cardHtml).join("")}
+          ${related.map(p => cardHtml(p)).join("")}
         </div>
       </div>
     </section>`;
@@ -644,7 +680,7 @@ function postTemplate(post, allPosts) {
         </div>
       </div>
     </header>
-    ${post.imagenLocal ? `<div class="wrap"><figure class="post-cover"><img src="${post.imagenLocal}" alt="${esc(post.titulo)}" fetchpriority="high" /></figure></div>` : ""}
+    ${post.imagenLocal ? `<div class="wrap"><figure class="post-cover"><img src="${post.imagenLocal}" alt="${esc(post.titulo)}"${dims(post.imagenInfo)} fetchpriority="high" /></figure></div>` : ""}
     <div class="wrap post-narrow">
       <div class="post-body">
         ${post.bodyHtml}
