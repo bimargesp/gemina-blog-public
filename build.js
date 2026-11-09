@@ -492,7 +492,7 @@ function htmlShell({ title, description, canonical, content, extraHead = "", ogI
           <span class="label">Contacto</span>
           <ul>
             <li><a href="${WHATSAPP}" target="_blank" rel="noopener">WhatsApp: +54 9 299 628-7652</a></li>
-            <li><a href="https://app.bimarg.com" target="_blank" rel="noopener">Calculadora por rubros</a></li>
+            <li><a href="https://construir.bimarg.com/" target="_blank" rel="noopener">Calculadora por rubros</a></li>
             <li><a href="/blog/">Blog</a></li>
           </ul>
         </div>
