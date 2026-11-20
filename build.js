@@ -496,6 +496,7 @@ function htmlShell({ title, description, canonical, content, extraHead = "", ogI
         <a href="/#cotizadores">Cotizadores</a>
         <a href="/blog/" aria-current="true">Blog</a>
         <a href="/#preguntas">Preguntas</a>
+        <a href="/calidades/">Calidades</a>
       </div>
       <a class="btn sm" href="/#chat">Contanos tu obra</a>
     </div>
@@ -519,6 +520,7 @@ function htmlShell({ title, description, canonical, content, extraHead = "", ogI
           <ul>
             <li><a href="${WHATSAPP}" target="_blank" rel="noopener">WhatsApp: +54 9 299 628-7652</a></li>
             <li><a href="https://construir.bimarg.com/" target="_blank" rel="noopener">Calculadora de obra por rubros</a></li>
+            <li><a href="/calidades/">Calidades de obra</a></li>
             <li><a href="/blog/">Blog</a></li>
           </ul>
         </div>
