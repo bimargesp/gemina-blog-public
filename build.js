@@ -493,7 +493,7 @@ function htmlShell({ title, description, canonical, content, extraHead = "", ogI
       <div class="nav-links">
         <a href="/#metodo">Método</a>
         <a href="/#sistemas">Sistemas</a>
-        <a href="/#cotizadores">Cotizadores</a>
+        <a href="/#cotizadores">Herramientas</a>
         <a href="/blog/" aria-current="true">Blog</a>
         <a href="/#preguntas">Preguntas</a>
         <a href="/calidades/">Calidades</a>
